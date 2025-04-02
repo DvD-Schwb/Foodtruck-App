@@ -4,31 +4,68 @@ export const checkUserEligibility = async (
   email: string,
   tempPassword: string
 ) => {
-  const { data: user, error } = await supabase
+  /* // Versuche verschiedene Abfragevarianten
+  const { data: allUsers } = await supabase.from("users").select("*");
+  console.log("Alle Benutzer:", allUsers);
+
+  const { data: exactMatch } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email)
-    .single();
+    .eq("email", "test@mail.de"); // Hardcoded zum Testen
+  console.log("Exakter Match mit Hardcoded Email:", exactMatch);
 
-  if (error) {
+  const { data: userMatch } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email);
+  console.log("Match mit übergebener Email:", userMatch, "Email war:", email);
+
+  const { data: ilikeMatch } = await supabase
+    .from("users")
+    .select("*")
+    .ilike("email", email);
+  console.log("Case-insensitive Match:", ilikeMatch); */
+  try {
+    console.log(`Checking eligibility for email: ${email}`);
+
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .ilike("email", email.trim())
+      .maybeSingle();
+
+    console.log("Supabase Response", { user, error });
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return {
+        success: false,
+        reason: `Datenbankfehler: ${error.message}`,
+      };
+    }
+
+    if (!user) {
+      return { success: false, reason: "Benutzer nicht gefunden" };
+    }
+
+    if (user.temp_pw !== tempPassword) {
+      return { success: false, reason: "Einmalpasswort ist falsch" };
+    }
+
+    if (user.pw_changed) {
+      return { success: false, reason: "Passwort wurde bereits geändert" };
+    }
+
+    return { success: true, user };
+  } catch (error) {
+    console.error("Unexpected error:", error);
     return {
       success: false,
-      reason: "Datenbankfehler",
+      reason: `Unerwarteter Fehler: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     };
   }
-  if (!user) {
-    return { success: false, reason: "Benutzer nicht gefunden" };
-  }
-
-  if (user.temp_pw !== tempPassword) {
-    return { success: false, reason: "Einmalpasswort ist falsch" };
-  }
-
-  if (user.pw_changed) {
-    return { success: false, reason: "Passwort wurde bereits geändert" };
-  }
-
-  return { success: true, user };
 };
 
 export const completeFirstLogin = async (

@@ -14,12 +14,24 @@ const FirstLoginScreen = () => {
 
   // ⚙️ FUNKTIONEN
   const handleCheck = async () => {
-    const result = await checkUserEligibility(email, tempPassword);
-    if (!result.success) {
-      Alert.alert("Fehler", result.reason);
-      return;
+    console.log("Button clicked, checking credentials..."); // Log 1
+
+    try {
+      const result = await checkUserEligibility(email, tempPassword);
+      console.log("Check result:", result); // Log 2
+
+      if (!result.success) {
+        Alert.alert("Fehler", result.reason);
+        return;
+      }
+
+      console.log("Setting step to newPassword"); // Log 3
+      setStep("newPassword");
+      console.log("Step state after update:", step); // Log 4
+    } catch (error) {
+      console.error("Error in handleCheck:", error); // Log error
+      Alert.alert("Fehler", "Ein unerwarteter Fehler ist aufgetreten");
     }
-    setStep("newPassword");
   };
 
   const handleComplete = async () => {
