@@ -12,5 +12,8 @@
     "build:mobile:android": "npm run build:android --workspace=mobile-app",
     "build:mobile:ios": "npm run build:ios --workspace=mobile-app"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "expo-dotenv": "^0.1.0"
+  }
 }
